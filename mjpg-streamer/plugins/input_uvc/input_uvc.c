@@ -94,7 +94,7 @@ int input_init(input_parameter *param, int id)
 {
     char *dev = "/dev/video0", *s;
     int width = 640, height = 480, fps = 5, format = V4L2_PIX_FMT_MJPEG, i;
-    /* initialize the mutes variable */
+    /* initialize the mutes variable ??????? */
     if(pthread_mutex_init(&cams[id].controls_mutex, NULL) != 0) {
         IPRINT("could not initialize mutex variable\n");
         exit(EXIT_FAILURE);
@@ -102,12 +102,12 @@ int input_init(input_parameter *param, int id)
 
     param->argv[0] = INPUT_PLUGIN_NAME;
 
-    /* show all parameters for DBG purposes */
+    /* show all parameters for DBG purposes ??????DBG??? */
     for(i = 0; i < param->argc; i++) {
         DBG("argv[%d]=%s\n", i, param->argv[i]);
     }
 
-    /* parse the parameters */
+    /* parse the parameters ???? */
     reset_getopt();
     while(1) {
         int option_index = 0, c = 0;
@@ -134,7 +134,7 @@ int input_init(input_parameter *param, int id)
             {0, 0, 0, 0}
         };
 
-        /* parsing all parameters according to the list above is sufficent */
+        /* parsing all parameters according to the list above is sufficent ????????????????? */
         c = getopt_long_only(param->argc, param->argv, "", long_options, &option_index);
 
         /* no more options to parse */
@@ -156,50 +156,50 @@ int input_init(input_parameter *param, int id)
             return 1;
             break;
 
-            /* d, device */
+            /* d, device ??/dev/videoX?????????/dev/video0 */
         case 2:
         case 3:
             DBG("case 2,3\n");
             dev = strdup(optarg);
             break;
 
-            /* r, resolution */
+            /* r, resolution ???????????resolutions? */
         case 4:
         case 5:
             DBG("case 4,5\n");
             width = -1;
             height = -1;
 
-            /* try to find the resolution in lookup table "resolutions" */
+            /* try to find the resolution in lookup table "resolutions" ??????? resolutions??????? */
             for(i = 0; i < LENGTH_OF(resolutions); i++) {
                 if(strcmp(resolutions[i].string, optarg) == 0) {
                     width  = resolutions[i].width;
                     height = resolutions[i].height;
                 }
             }
-            /* done if width and height were set */
+            /* done if width and height were set ???resolutions??????? */
             if(width != -1 && height != -1)
                 break;
-            /* parse value as decimal value */
+            /* parse value as decimal value ??????????????????width x height??? */
             width  = strtol(optarg, &s, 10);
             height = strtol(s + 1, NULL, 10);
             break;
 
-            /* f, fps */
+            /* f, fps ???? */
         case 6:
         case 7:
             DBG("case 6,7\n");
             fps = atoi(optarg);
             break;
 
-            /* y, yuv */
+            /* y, yuv ???yuv?? */
         case 8:
         case 9:
             DBG("case 8,9\n");
             format = V4L2_PIX_FMT_YUYV;
             break;
 
-            /* q, quality */
+            /* q, quality ??yuv????? */
         case 10:
         case 11:
             DBG("case 10,11\n");
@@ -207,21 +207,21 @@ int input_init(input_parameter *param, int id)
             gquality = MIN(MAX(atoi(optarg), 0), 100);
             break;
 
-            /* m, minimum_size */
+            /* m, minimum_size ?????? */
         case 12:
         case 13:
             DBG("case 12,13\n");
             minimum_size = MAX(atoi(optarg), 0);
             break;
 
-            /* n, no_dynctrl */
+            /* n, no_dynctrl ?????? */
         case 14:
         case 15:
             DBG("case 14,15\n");
             dynctrls = 0;
             break;
 
-            /* l, led */
+            /* l, led led?? */
         case 16:
         case 17:/*
         DBG("case 16,17\n");
@@ -254,7 +254,7 @@ int input_init(input_parameter *param, int id)
     }
     memset(cams[id].videoIn, 0, sizeof(struct vdIn));
 
-    /* display the parsed values */
+    /* display the parsed values ??????? */
     IPRINT("Using V4L2 device.: %s\n", dev);
     IPRINT("Desired Resolution: %i x %i\n", width, height);
     IPRINT("Frames Per Second.: %i\n", fps);

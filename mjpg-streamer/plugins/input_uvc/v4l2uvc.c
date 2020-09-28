@@ -197,6 +197,7 @@ static int init_v4l2(struct vdIn *vd)
 {
     int i;
     int ret = 0;
+    // 打开/dev/video0设备文件
     if((vd->fd = OPEN_VIDEO(vd->videodevice, O_RDWR)) == -1) {
         perror("ERROR opening V4L interface");
         DBG("errno: %d", errno);
@@ -204,12 +205,14 @@ static int init_v4l2(struct vdIn *vd)
     }
 
     memset(&vd->cap, 0, sizeof(struct v4l2_capability));
+    // 获得设备的功能
     ret = xioctl(vd->fd, VIDIOC_QUERYCAP, &vd->cap);
     if(ret < 0) {
         fprintf(stderr, "Error opening device %s: unable to query device.\n", vd->videodevice);
         goto fatal;
     }
 
+    // 如果不是一个视频捕获设备
     if((vd->cap.capabilities & V4L2_CAP_VIDEO_CAPTURE) == 0) {
         fprintf(stderr, "Error opening device %s: video capture not supported.\n",
                 vd->videodevice);
@@ -229,7 +232,7 @@ static int init_v4l2(struct vdIn *vd)
     }
 
     /*
-     * set format in
+     * set format in 根据命令行传参设置输入格式
      */
     memset(&vd->fmt, 0, sizeof(struct v4l2_format));
     vd->fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
