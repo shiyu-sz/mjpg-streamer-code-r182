@@ -83,10 +83,10 @@ static const struct {
 /* the webserver determines between these values for an answer */
 typedef enum {
     A_UNKNOWN,
-    A_SNAPSHOT,
-    A_STREAM,
-    A_COMMAND,
-    A_FILE,
+    A_SNAPSHOT,     // 拍照
+    A_STREAM,       // 流
+    A_COMMAND,      // 指令
+    A_FILE,         // 文件
     A_INPUT_JSON,
     A_OUTPUT_JSON,
     A_PROGRAM_JSON,

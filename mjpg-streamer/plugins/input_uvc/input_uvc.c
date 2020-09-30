@@ -254,7 +254,7 @@ int input_init(input_parameter *param, int id)
     }
     memset(cams[id].videoIn, 0, sizeof(struct vdIn));
 
-    /* display the parsed values ??????? */
+    /* display the parsed values 显示解析的值 */
     IPRINT("Using V4L2 device.: %s\n", dev);
     IPRINT("Desired Resolution: %i x %i\n", width, height);
     IPRINT("Frames Per Second.: %i\n", fps);
@@ -263,7 +263,7 @@ int input_init(input_parameter *param, int id)
         IPRINT("JPEG Quality......: %d\n", gquality);
 
     DBG("vdIn pn: %d\n", id);
-    /* open video device and prepare data structure */
+    /* open video device and prepare data structure 打开视频设备并准备数据结构 */
     if(init_videoIn(cams[id].videoIn, dev, width, height, fps, format, 1, cams[id].pglobal, id) < 0) {
         IPRINT("init_VideoIn failed\n");
         closelog();
@@ -273,11 +273,13 @@ int input_init(input_parameter *param, int id)
      * recent linux-uvc driver (revision > ~#125) requires to use dynctrls
      * for pan/tilt/focus/...
      * dynctrls must get initialized
+     * 动态控制初始化
      */
     if(dynctrls)
         initDynCtrls(cams[id].videoIn->fd);
 
-    enumerateControls(cams[id].videoIn, cams[id].pglobal, id); // enumerate V4L2 controls after UVC extended mapping
+    // enumerate V4L2 controls after UVC extended mapping 在UVC扩展映射后枚举V4L2控件
+    enumerateControls(cams[id].videoIn, cams[id].pglobal, id);
 
     return 0;
 }
@@ -308,7 +310,7 @@ int input_run(int id)
     }
 
     DBG("launching camera thread #%02d\n", id);
-    /* create thread and pass context to thread function */
+    /* create thread and pass context to thread function 创建线程读cam */
     pthread_create(&(cams[id].threadID), NULL, cam_thread, &(cams[id]));
     pthread_detach(cams[id].threadID);
     return 0;
@@ -365,7 +367,7 @@ void *cam_thread(void *arg)
     context *pcontext = arg;
     pglobal = pcontext->pglobal;
 
-    /* set cleanup handler to cleanup allocated ressources */
+    /* set cleanup handler to cleanup allocated ressources 设置清理处理程序以清理分配的资源 */
     pthread_cleanup_push(cam_cleanup, pcontext);
 
     while(!pglobal->stop) {
@@ -373,7 +375,7 @@ void *cam_thread(void *arg)
             usleep(1); // maybe not the best way so FIXME
         }
 
-        /* grab a frame */
+        /* grab a frame 获得一帧数据 */
         if(uvcGrab(pcontext->videoIn) < 0) {
             IPRINT("Error grabbing frames\n");
             exit(EXIT_FAILURE);
@@ -404,9 +406,11 @@ void *cam_thread(void *arg)
          */
         if(pcontext->videoIn->formatIn == V4L2_PIX_FMT_YUYV) {
             DBG("compressing frame from input: %d\n", (int)pcontext->id);
+            // 将videoIn中framebuffer的数据转换为RGB后放到pglobal->in[pcontext->id].buf中
             pglobal->in[pcontext->id].size = compress_yuyv_to_jpeg(pcontext->videoIn, pglobal->in[pcontext->id].buf, pcontext->videoIn->framesizeIn, gquality);
         } else {
             DBG("copying frame from input: %d\n", (int)pcontext->id);
+            // 将videoIn中framebuffer的数据转换后放到pglobal->in[pcontext->id].buf中
             pglobal->in[pcontext->id].size = memcpy_picture(pglobal->in[pcontext->id].buf, pcontext->videoIn->tmpbuffer, pcontext->videoIn->buf.bytesused);
         }
 
@@ -418,15 +422,15 @@ void *cam_thread(void *arg)
         prev_size = global->size;
 #endif
 
-        /* copy this frame's timestamp to user space */
+        /* copy this frame's timestamp to user space 将此帧的时间戳复制到用户空间 */
         pglobal->in[pcontext->id].timestamp = pcontext->videoIn->buf.timestamp;
 
-        /* signal fresh_frame */
+        /* signal fresh_frame 发送数据更新信号 */
         pthread_cond_broadcast(&pglobal->in[pcontext->id].db_update);
         pthread_mutex_unlock(&pglobal->in[pcontext->id].db);
 
 
-        /* only use usleep if the fps is below 5, otherwise the overhead is too long */
+        /* only use usleep if the fps is below 5, otherwise the overhead is too long 仅在fps低于5时使用usleep，否则开销太长 */
         if(pcontext->videoIn->fps < 5) {
             DBG("waiting for next frame for %d us\n", 1000 * 1000 / pcontext->videoIn->fps);
             usleep(1000 * 1000 / pcontext->videoIn->fps);

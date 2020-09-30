@@ -352,6 +352,7 @@ int main(int argc, char *argv[])
         global.in[i].param.global = &global;
         global.in[i].param.id = i;
 
+        // 调用input_init
         if(global.in[i].init(&global.in[i].param, i)) {
             LOG("input_init() return value signals to exit\n");
             closelog();
@@ -396,6 +397,7 @@ int main(int argc, char *argv[])
 
         global.out[i].param.global = &global;
         global.out[i].param.id = i;
+        // 调用output_init
         if(global.out[i].init(&global.out[i].param, i)) {
             LOG("output_init() return value signals to exit\n");
             closelog();
@@ -403,7 +405,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    /* start to read the input, push pictures into global buffer */
+    /* start to read the input, push pictures into global buffer 开始读取输入，将图片推入全局缓冲区，运行input_run */
     DBG("starting %d input plugin\n", global.incnt);
     for(i = 0; i < global.incnt; i++) {
         syslog(LOG_INFO, "starting input plugin %s", global.in[i].plugin);
@@ -414,6 +416,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    // 运行输出的output_run
     DBG("starting %d output plugin(s)\n", global.outcnt);
     for(i = 0; i < global.outcnt; i++) {
         syslog(LOG_INFO, "starting output plugin: %s (ID: %02d)", global.out[i].plugin, global.out[i].param.id);

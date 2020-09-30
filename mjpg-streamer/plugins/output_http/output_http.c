@@ -133,14 +133,14 @@ int output_init(output_parameter *param, int id)
             return 1;
             break;
 
-            /* p, port */
+            /* p, port 端口 */
         case 2:
         case 3:
             DBG("case 2,3\n");
             port = htons(atoi(optarg));
             break;
 
-            /* c, credentials */
+            /* c, credentials 证书 */
         case 4:
         case 5:
             DBG("case 4,5\n");
@@ -157,7 +157,7 @@ int output_init(output_parameter *param, int id)
                 strcat(www_folder, "/");
             break;
 
-            /* n, nocommands */
+            /* n, nocommands 无命令 */
         case 8:
         case 9:
             DBG("case 8,9\n");
@@ -206,7 +206,7 @@ int output_run(int id)
 {
     DBG("launching server thread #%02d\n", id);
 
-    /* create thread and pass context to thread function */
+    /* create thread and pass context to thread function 创建一个线程向客户端推数据 */
     pthread_create(&(servers[id].threadID), NULL, server_thread, &(servers[id]));
     pthread_detach(servers[id].threadID);
 

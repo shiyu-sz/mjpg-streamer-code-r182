@@ -2188,9 +2188,9 @@ struct v4l2_create_buffers {
 #define VIDIOC_G_FBUF		 _IOR('V', 10, struct v4l2_framebuffer)     // 获取帧缓冲区覆盖参数
 #define VIDIOC_S_FBUF		 _IOW('V', 11, struct v4l2_framebuffer)     // 设置帧缓冲区覆盖参数
 #define VIDIOC_OVERLAY		 _IOW('V', 14, int)                         // 开始或停止视频叠加
-#define VIDIOC_QBUF		_IOWR('V', 15, struct v4l2_buffer)              // 与驱动程序交换缓冲区
+#define VIDIOC_QBUF		_IOWR('V', 15, struct v4l2_buffer)              // 将缓冲区放到队列中
 #define VIDIOC_EXPBUF		_IOWR('V', 16, struct v4l2_exportbuffer)    // 将缓冲区导出为DMABUF文件描述符。
-#define VIDIOC_DQBUF		_IOWR('V', 17, struct v4l2_buffer)          // 同 VIDIOC_QBUF
+#define VIDIOC_DQBUF		_IOWR('V', 17, struct v4l2_buffer)          // 将缓冲区出队列
 #define VIDIOC_STREAMON		 _IOW('V', 18, int)                         // 开始流媒体IO
 #define VIDIOC_STREAMOFF	 _IOW('V', 19, int)                         // 停止流媒体IO
 #define VIDIOC_G_PARM		_IOWR('V', 21, struct v4l2_streamparm)      // 获得流媒体参数

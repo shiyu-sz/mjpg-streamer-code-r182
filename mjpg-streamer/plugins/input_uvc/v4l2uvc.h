@@ -110,10 +110,10 @@ struct vdIn {
 /* context of each camera thread */
 typedef struct {
     int id;
-    globals *pglobal;
-    pthread_t threadID;
-    pthread_mutex_t controls_mutex;
-    struct vdIn *videoIn;
+    globals *pglobal;       //保存输入和输出插件
+    pthread_t threadID;     //线程ID
+    pthread_mutex_t controls_mutex; //线程锁
+    struct vdIn *videoIn;   //输入信息
 } context;
 
 context cams[MAX_INPUT_PLUGINS];

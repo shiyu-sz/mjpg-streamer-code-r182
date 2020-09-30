@@ -375,7 +375,7 @@ void send_stream(int fd, int input_number)
 
     while(!pglobal->stop) {
 
-        /* wait for fresh frames */
+        /* wait for fresh frames 等待数据更新 */
         pthread_mutex_lock(&pglobal->in[input_number].db);
         pthread_cond_wait(&pglobal->in[input_number].db_update, &pglobal->in[input_number].db);
 
@@ -740,9 +740,12 @@ Description.: Serve a connected TCP-client. This thread function is called
               for each connect of a HTTP client like a webbrowser. It determines
               if it is a valid HTTP request and dispatches between the different
               response options.
+              服务已连接的TCP客户端。 对于HTTP客户端（如Web浏览器）的每次连接，都会调用此线程函数。 
+              它确定它是否为有效的HTTP请求，并在不同的响应选项之间进行分派。
 Input Value.: arg is the filedescriptor and server-context of the connected TCP
               socket. It must have been allocated so it is freeable by this
               thread function.
+              arg是连接的TCP套接字的文件描述符和服务器上下文。 它必须已分配，因此可以通过此线程函数释放。
 Return Value: always NULL
 ******************************************************************************/
 /* thread for clients that connected to this server */
@@ -767,14 +770,14 @@ void *client_thread(void *arg)
     init_iobuffer(&iobuf);
     init_request(&req);
 
-    /* What does the client want to receive? Read the request. */
+    /* What does the client want to receive? Read the request. 读取客户端的请求 */
     memset(buffer, 0, sizeof(buffer));
     if((cnt = _readline(lcfd.fd, &iobuf, buffer, sizeof(buffer) - 1, 5)) == -1) {
         close(lcfd.fd);
         return NULL;
     }
 
-    /* determine what to deliver */
+    /* determine what to deliver 判断请求是什么类型的 */
     if(strstr(buffer, "GET /?action=snapshot") != NULL) {
         req.type = A_SNAPSHOT;
 #ifdef WXP_COMPAT
@@ -861,6 +864,7 @@ void *client_thread(void *arg)
      * there are some url which could have a _[plugin number suffix]
      * For compatibility reasons it could be left in that case the output will be
      * generated from the 0. input plugin
+     * 因为当我们使用多个输入插件时有些URL可能带有_ [插件编号后缀] 由于兼容性原因，在这种情况下可以将其输出从0生成。input插件
      */
     if(input_suffixed) {
         char *sch = strchr(buffer, '_');
@@ -983,6 +987,7 @@ void server_cleanup(void *arg)
 /******************************************************************************
 Description.: Open a TCP socket and wait for clients to connect. If clients
               connect, start a new thread for each accepted connection.
+              打开一个TCP套接字，等待客户端连接。 如果客户端连接，请为每个接受的连接启动一个新线程。
 Input Value.: arg is a pointer to the globals struct
 Return Value: always NULL, will only return on exit
 ******************************************************************************/
@@ -1072,7 +1077,7 @@ void *server_thread(void *arg)
         exit(EXIT_FAILURE);
     }
 
-    /* create a child for every client that connects */
+    /* create a child for every client that connects 为每个连接的客户端创建一个子级 */
     while(!pglobal->stop) {
         //int *pfd = (int *)malloc(sizeof(int));
         cfd *pcfd = malloc(sizeof(cfd));

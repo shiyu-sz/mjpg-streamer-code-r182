@@ -84,7 +84,7 @@ int init_videoIn(struct vdIn *vd, char *device, int width,
     }
 
 
-    // enumerating formats
+    // enumerating formats 获得数据格式
     int currentWidth, currentHeight = 0;
     struct v4l2_format currentFormat;
     currentFormat.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -99,6 +99,7 @@ int init_videoIn(struct vdIn *vd, char *device, int width,
         struct v4l2_fmtdesc fmtdesc;
         fmtdesc.index = pglobal->in[id].formatCount;
         fmtdesc.type  = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        // 枚举图像格式
         if(xioctl(vd->fd, VIDIOC_ENUM_FMT, &fmtdesc) < 0) {
             break;
         }
@@ -114,9 +115,10 @@ int init_videoIn(struct vdIn *vd, char *device, int width,
             return -1;
         }
 
-
+        // 枚举到了将格式保存
         memcpy(&pglobal->in[id].in_formats[pglobal->in[id].formatCount], &fmtdesc, sizeof(input_format));
 
+        // 如果枚举到的格式正好是设置的格式，记住格式的下标
         if(fmtdesc.pixelformat == format)
             pglobal->in[id].currentFormat = pglobal->in[id].formatCount;
 
@@ -131,6 +133,7 @@ int init_videoIn(struct vdIn *vd, char *device, int width,
         while(1) {
             fsenum.index = j;
             j++;
+            // 枚举分辨率
             if(xioctl(vd->fd, VIDIOC_ENUM_FRAMESIZES, &fsenum) == 0) {
                 pglobal->in[id].in_formats[pglobal->in[id].formatCount].resolutionCount++;
                 if (pglobal->in[id].in_formats[pglobal->in[id].formatCount].supportedResolutions == NULL) {
@@ -160,7 +163,7 @@ int init_videoIn(struct vdIn *vd, char *device, int width,
         }
     }
 
-    /* alloc a temp buffer to reconstruct the pict */
+    /* alloc a temp buffer to reconstruct the pict 分配一个临时缓冲区以重建图像，calloc分配内存并清空 */
     vd->framesizeIn = (vd->width * vd->height << 1);
     switch(vd->formatIn) {
     case V4L2_PIX_FMT_MJPEG:
@@ -232,7 +235,7 @@ static int init_v4l2(struct vdIn *vd)
     }
 
     /*
-     * set format in 根据命令行传参设置输入格式
+     * set format in 根据命令行传参设置输入格式，VIDIOC_S_FMT是设置数据格式
      */
     memset(&vd->fmt, 0, sizeof(struct v4l2_format));
     vd->fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -246,6 +249,7 @@ static int init_v4l2(struct vdIn *vd)
         goto fatal;
     }
 
+    // 看设置是否成功
     if((vd->fmt.fmt.pix.width != vd->width) ||
             (vd->fmt.fmt.pix.height != vd->height)) {
         fprintf(stderr, "i: The format asked unavailable, so the width %d height %d \n", vd->fmt.fmt.pix.width, vd->fmt.fmt.pix.height);
@@ -268,7 +272,7 @@ static int init_v4l2(struct vdIn *vd)
     }
 
     /*
-     * set framerate
+     * set framerate 设置流媒体参数
      */
     struct v4l2_streamparm *setfps;
     setfps = (struct v4l2_streamparm *) calloc(1, sizeof(struct v4l2_streamparm));
@@ -279,7 +283,7 @@ static int init_v4l2(struct vdIn *vd)
     ret = xioctl(vd->fd, VIDIOC_S_PARM, setfps);
 
     /*
-     * request buffers
+     * request buffers 初始化内存映射
      */
     memset(&vd->rb, 0, sizeof(struct v4l2_requestbuffers));
     vd->rb.count = NB_BUFFER;
@@ -293,7 +297,7 @@ static int init_v4l2(struct vdIn *vd)
     }
 
     /*
-     * map the buffers
+     * map the buffers 查询缓存区状态，然后映射缓冲区
      */
     for(i = 0; i < NB_BUFFER; i++) {
         memset(&vd->buf, 0, sizeof(struct v4l2_buffer));
@@ -321,7 +325,7 @@ static int init_v4l2(struct vdIn *vd)
     }
 
     /*
-     * Queue the buffers.
+     * Queue the buffers. 将映射后的缓冲区放到队列中，驱动采集到数据后会填充这些缓冲区，然后应用层再发VIDIOC_DQBUF指令读队列
      */
     for(i = 0; i < NB_BUFFER; ++i) {
         memset(&vd->buf, 0, sizeof(struct v4l2_buffer));
@@ -417,19 +421,21 @@ int memcpy_picture(unsigned char *out, unsigned char *buf, int size)
     return pos;
 }
 
+// 获得一帧数据
 int uvcGrab(struct vdIn *vd)
 {
 #define HEADERFRAME1 0xaf
     int ret;
 
     if(vd->streamingState == STREAMING_OFF) {
+        // 发送VIDIOC_STREAMON开始流媒体IO
         if(video_enable(vd))
             goto err;
     }
     memset(&vd->buf, 0, sizeof(struct v4l2_buffer));
     vd->buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     vd->buf.memory = V4L2_MEMORY_MMAP;
-
+    // 获得驱动程序缓冲区的数据
     ret = xioctl(vd->fd, VIDIOC_DQBUF, &vd->buf);
     if(ret < 0) {
         perror("Unable to dequeue buffer");
@@ -452,6 +458,7 @@ int uvcGrab(struct vdIn *vd)
         memcpy (vd->tmpbuffer + HEADERFRAME1 + sizeof(dht_data), vd->mem[vd->buf.index] + HEADERFRAME1, (vd->buf.bytesused - HEADERFRAME1));
         */
 
+        // mem在init_v4l2中映射了物理地址
         memcpy(vd->tmpbuffer, vd->mem[vd->buf.index], vd->buf.bytesused);
 
         if(debug)
@@ -781,9 +788,10 @@ int setResolution(struct vdIn *vd, int width, int height)
     return ret;
 }
 
+// 枚举控件
 void enumerateControls(struct vdIn *vd, globals *pglobal, int id)
 {
-    // enumerating v4l2 controls
+    // enumerating v4l2 controls 枚举v4l2控件
     struct v4l2_queryctrl ctrl;
     pglobal->in[id].parametercount = 0;
     pglobal->in[id].in_parameters = NULL;
@@ -792,6 +800,7 @@ void enumerateControls(struct vdIn *vd, globals *pglobal, int id)
 #ifdef V4L2_CTRL_FLAG_NEXT_CTRL
     DBG("V4L2 API's V4L2_CTRL_FLAG_NEXT_CTRL is supported\n");
     ctrl.id = V4L2_CTRL_FLAG_NEXT_CTRL;
+    // VIDIOC_QUERYCTRL 枚举控件
     if(0 == IOCTL_VIDEO(vd->fd, VIDIOC_QUERYCTRL, &ctrl)) {
         do {
             control_readed(vd, &ctrl, pglobal, id);
@@ -812,7 +821,7 @@ void enumerateControls(struct vdIn *vd, globals *pglobal, int id)
             }
         }
 
-        /* Check any custom controls */
+        /* Check any custom controls 检查任何自定义控件 */
         for(i = V4L2_CID_PRIVATE_BASE; ; i++) {
             ctrl.id = i;
             if(IOCTL_VIDEO(vd->fd, VIDIOC_QUERYCTRL, &ctrl) == 0) {
